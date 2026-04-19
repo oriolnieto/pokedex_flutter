@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'pokemon_model.dart';
+import 'pokemon_services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,72 +9,133 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Pokédex',
       theme: ThemeData(
-
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.red,
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const PokedexHome(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class PokedexHome extends StatefulWidget {
+  const PokedexHome({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<PokedexHome> createState() => _PokedexHomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PokedexHomeState extends State<PokedexHome> {
+  final PokemonService _service = PokemonService();
+  final TextEditingController _controller = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  Future<Pokemon>? _pokemonFuture;
+
+  void _buscar() {
+    if (_controller.text.isNotEmpty) {
+      setState(() {
+        _pokemonFuture = _service.fetchPokemon(_controller.text);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Cercador Pokédex'),
+        centerTitle: true,
+        backgroundColor: Colors.redAccent,
+        foregroundColor: Colors.white,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      labelText: 'Nom o número de Pokédex..',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: _buscar,
+                  child: const Icon(Icons.search),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+
+            Expanded(
+              child: FutureBuilder<Pokemon>(
+                future: _pokemonFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        '${snapshot.error}',
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
+                      ),
+                    );
+                  }
+
+                  if (snapshot.hasData) {
+                    final pokemon = snapshot.data!;
+                    return SingleChildScrollView(
+                      child: Card(
+                        elevation: 4,
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            children: [
+                              Image.network(
+                                pokemon.imageUrl,
+                                height: 150,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 100),
+                              ),
+                              Text(
+                                pokemon.name.toUpperCase(),
+                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                              ),
+                              Text('Nº Pokédex: ${pokemon.id}'),
+                              const Divider(),
+                              Text('Tipus: ${pokemon.types.join(', ')}'),
+                              const SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Text('Altura: ${pokemon.height / 10} m'), // dividir ja que les dades venen en hectometres!
+                                  Text('Pes: ${pokemon.weight / 10} kg'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return const Center(child: Text('Fes una cerca per començar!'));
+                },
+              ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }

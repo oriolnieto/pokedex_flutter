@@ -7,7 +7,7 @@ class PokemonService {
 
     final search = pokemon.toLowerCase().trim(); // filtre per si l'usuari escriu malament!
     final url = Uri.parse('https://pokeapi.co/api/v2/pokemon/$search');
-    
+
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) { // 200 means correcte!
@@ -20,7 +20,7 @@ class PokemonService {
         throw Exception('Error de servidor (${response.statusCode})');
       }
     } catch (e) {
-      throw Exception('Error de connexió: Revisa el teu internet.');
+      throw Exception('Error de connexió: Bona Sort al Dia 2!');
     }
   }
 }
