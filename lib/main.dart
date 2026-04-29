@@ -15,8 +15,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Pokédex',
       theme: ThemeData(
-        primarySwatch: Colors.red,
-        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.red,
+          primary: Colors.red,
+        ),
       ),
       home: const PokedexHome(),
     );
@@ -33,7 +35,6 @@ class PokedexHome extends StatefulWidget {
 class _PokedexHomeState extends State<PokedexHome> {
   final PokemonService _service = PokemonService();
   final TextEditingController _controller = TextEditingController();
-
   Future<Pokemon>? _pokemonFuture;
 
   void _buscar() {
@@ -48,10 +49,10 @@ class _PokedexHomeState extends State<PokedexHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cercador Pokédex'),
+        title: const Text('Pokédex: JanoVGC Edition',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.red,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -63,15 +64,22 @@ class _PokedexHomeState extends State<PokedexHome> {
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
-                      labelText: 'Nom o número de Pokédex..',
+                      labelText: 'Nom o número de Pokédex',
                       border: OutlineInputBorder(),
                     ),
+                    onSubmitted: (_) => _buscar(),
                   ),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _buscar,
-                  child: const Icon(Icons.search),
+                  style: ElevatedButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Icon(Icons.search, size: 25),
                 ),
               ],
             ),
@@ -88,8 +96,9 @@ class _PokedexHomeState extends State<PokedexHome> {
                   if (snapshot.hasError) {
                     return Center(
                       child: Text(
-                        '${snapshot.error}',
-                        style: const TextStyle(color: Colors.red, fontSize: 16),
+                        '${snapshot.error}'.replaceFirst('Exception: ', ''),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     );
                   }
@@ -99,29 +108,41 @@ class _PokedexHomeState extends State<PokedexHome> {
                     return SingleChildScrollView(
                       child: Card(
                         elevation: 4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
                             children: [
                               Image.network(
                                 pokemon.imageUrl,
-                                height: 150,
+                                height: 180,
                                 fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 100),
                               ),
+                              const SizedBox(height: 10),
                               Text(
                                 pokemon.name.toUpperCase(),
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: 28, color: Colors.black87),
                               ),
-                              Text('Nº Pokédex: ${pokemon.id}'),
-                              const Divider(),
-                              Text('Tipus: ${pokemon.types.join(', ')}'),
-                              const SizedBox(height: 10),
+                              Text('Nº Pokédex: ${pokemon.id}', style: const TextStyle(color: Colors.grey, fontSize: 16)),
+                              const Divider(height: 40),
+                              Text('Tipus: ${pokemon.types.join(', ')}',
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                              const SizedBox(height: 20),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
-                                  Text('Altura: ${pokemon.height / 10} m'), // dividir ja que les dades venen en hectometres!
-                                  Text('Pes: ${pokemon.weight / 10} kg'),
+                                  Column(
+                                    children: [
+                                      const Text('Altura', style: TextStyle(color: Colors.grey)),
+                                      Text('${pokemon.height / 10} m', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      const Text('Pes', style: TextStyle(color: Colors.grey)),
+                                      Text('${pokemon.weight / 10} kg', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ],
@@ -130,7 +151,7 @@ class _PokedexHomeState extends State<PokedexHome> {
                       ),
                     );
                   }
-                  return const Center(child: Text('Fes una cerca per començar!'));
+                  return const Center(child: Text('Fes una cerca per començar!', style: TextStyle(color: Colors.grey)));
                 },
               ),
             ),
